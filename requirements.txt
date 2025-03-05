@@ -1,2 +1,5 @@
-pydub==0.25.1
-vosk==0.3.44
+mediapipe
+numpy
+opencv-python
+pydub
+vosk

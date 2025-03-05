@@ -15,7 +15,7 @@ def convert_to_mono(wav_file: str, output_file: str):
     mono_audio.export(output_file, format="wav")
 
 
-def speech_to_text(wav_file: str, model_path: str = "model", chunk_duration_seconds: float = 0.25):
+def speech_to_text(wav_file: str, model_path: str = "model", chunk_duration_seconds: float = 0.1):
     """Extract speech with word timings using Vosk speech-to-text model."""
     # Check sampling rate and whether audio is mono/stereo
     with wave.open(wav_file, "rb") as wf:

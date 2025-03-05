@@ -24,12 +24,17 @@ def convert_frame_to_rgb(frame):
     return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
 
-def detect_hands(rgb_image, model):
+def detect_hands(rgb_image, model: mp.solutions.hands.Hands, **kwargs):
     """Detect hands in an image."""
-    return model.process(rgb_image)
+    return model.process(rgb_image, **kwargs)
     
 
-def detect_hand_gestures_in_video(video_path, hands_detection_model, min_frame_appearances=10):
+def detect_hand_gestures_in_video(video_path: str,
+                                  hands_detection_model: mp.solutions.hands.Hands,
+                                  minimum_frames_per_gesture=10,
+                                  maximum_frames_per_gesture=100,
+                                  **kwargs
+                                  ):
     """Detect video frames containing hands and return index of hand gestures with associated hand landmarks and timing information."""
     # Open video file and load as video capture object
     cap = cv2.VideoCapture(video_path)
@@ -47,21 +52,19 @@ def detect_hand_gestures_in_video(video_path, hands_detection_model, min_frame_a
         frame_rgb = convert_frame_to_rgb(frame)
         
         # Process the frame to detect hands
-        results = detect_hands(frame_rgb, hands_detection_model)
+        results = detect_hands(frame_rgb, hands_detection_model, **kwargs)
         
         # Check if hands were detected
         if results.multi_hand_landmarks:
-            # Increment new gesture
-            if not hand_gesture_detected:
+            # Increment new gesture or start new gesture if maximum length reached
+            if not hand_gesture_detected or len(gestures[gesture_index]) >= maximum_frames_per_gesture:
                 gesture_index += 1
             hand_gesture_detected = True
 
+            # Save the hand landmarks and timestamps
             for hand_landmarks in results.multi_hand_landmarks:
-                # Draw landmarks on the frame
-                mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
-
-                # Save the hand landmarks and timestamp
-                hand_shape = [np.array([lm.x, lm.y, lm.z]) for lm in hand_landmarks.landmark]  # Extract hand shape as (x, y, z)
+                # Extract hand shape as (x, y, z) coordinates
+                hand_shape = [np.array([lm.x, lm.y, lm.z]) for lm in hand_landmarks.landmark]
                 gestures[gesture_index].append({
                     "timestamp": get_frame_timestamp_in_seconds(cap),
                     "hand_shape": hand_shape
@@ -69,8 +72,8 @@ def detect_hand_gestures_in_video(video_path, hands_detection_model, min_frame_a
         else:
             hand_gesture_detected = False
 
-    # Filter out gestures appearing in minimum N frames (potential false positives)
-    gestures = {idx: entry for idx, entry in gestures.items() if len(entry) >= min_frame_appearances}
+    # Filter out gestures appearing in fewer than minimum N frames (potential false positives)
+    gestures = {idx: gesture for idx, gesture in gestures.items() if len(gesture) >= minimum_frames_per_gesture}
 
     return gestures
 

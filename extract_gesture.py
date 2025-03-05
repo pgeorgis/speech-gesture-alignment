@@ -27,24 +27,38 @@ def detect_hands(rgb_image, model):
     return model.process(rgb_image)
     
 
-def detect_hands_in_video(video_path):
-    
+def detect_hands_in_video(video_path, hands_detection_model):
+    """Detect video frames containing hands and return list of hand landmarks with timing information."""
     # Open video file and load as video capture object
     cap = cv2.VideoCapture(video_path)
 
-    # Iterate over video frames
+    # Iterate over video frames and collect hand landmarks
+    landmarks_data = []
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
-        # Get the timestamp
-        timestamp = get_frame_timestamp_in_seconds(cap)
         
         # Convert the frame to RGB format
         frame_rgb = convert_frame_to_rgb(frame)
         
         # Process the frame to detect hands
-        results = detect_hands(frame_rgb)
-        breakpoint()
+        results = detect_hands(frame_rgb, hands_detection_model)
+        
+        # Check if hands were detected
+        if results.multi_hand_landmarks:
+            for hand_landmarks in results.multi_hand_landmarks:
+                # Draw landmarks on the frame
+                mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
-detect_hands_in_video("data/video.mp4")
+                # Save the hand landmarks and timestamp
+                hand_shape = [(lm.x, lm.y, lm.z) for lm in hand_landmarks.landmark]  # Extract hand shape as (x, y, z)
+                landmarks_data.append({
+                    "timestamp": get_frame_timestamp_in_seconds(cap),
+                    "hand_shape": hand_shape
+                })
+    return landmarks_data
+    
+
+hands_detection_model = get_hands_detection_model()
+detect_hands_in_video("data/video.mp4", hands_detection_model)

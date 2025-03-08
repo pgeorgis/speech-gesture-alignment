@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def compute_velocity(positions: np.array, times: np.array):
     """Compute instantaneous speed at each time step via discrete derivative."""
     velocities = np.linalg.norm(np.diff(positions, axis=0), axis=1) / np.diff(times)[:, np.newaxis]

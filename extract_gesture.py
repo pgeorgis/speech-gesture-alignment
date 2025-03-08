@@ -1,5 +1,4 @@
 from collections import defaultdict
-from statistics import mean
 
 import cv2
 import mediapipe as mp
@@ -95,7 +94,3 @@ def detect_gesture_apices(gestures: dict) -> dict:
         gesture_apices[idx]["max_extension_timestamp"] = max_extension_time
     return gesture_apices
 
-hands_detection_model = get_hands_detection_model(min_detection_confidence=0.75)
-gestures = detect_hand_gestures_in_video("data/video.mp4", hands_detection_model)
-gesture_apices = detect_gesture_apices(gestures)
-apex_timestamps = [mean(gesture_apex.values()) for gesture_apex in gesture_apices.values()]

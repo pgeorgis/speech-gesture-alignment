@@ -1,17 +1,19 @@
 from collections import defaultdict
+from statistics import mean
+
 import cv2
 import mediapipe as mp
 import numpy as np
+
 from process_gesture import find_apex
-import json
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
 
 
-def get_hands_detection_model():
+def get_hands_detection_model(**kwargs):
     """Return a new instance of a mediapipe Hands detection model."""
-    return mp_hands.Hands()
+    return mp_hands.Hands(**kwargs)
 
 
 def get_frame_timestamp_in_seconds(cap):
@@ -24,16 +26,15 @@ def convert_frame_to_rgb(frame):
     return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
 
-def detect_hands(rgb_image, model: mp.solutions.hands.Hands, **kwargs):
+def detect_hands(rgb_image, model: mp.solutions.hands.Hands):
     """Detect hands in an image."""
-    return model.process(rgb_image, **kwargs)
+    return model.process(rgb_image)
     
 
 def detect_hand_gestures_in_video(video_path: str,
                                   hands_detection_model: mp.solutions.hands.Hands,
-                                  minimum_frames_per_gesture=10,
-                                  maximum_frames_per_gesture=100,
-                                  **kwargs
+                                  minimum_frames_per_gesture: int = 50,
+                                  maximum_frames_per_gesture: int = 100
                                   ):
     """Detect video frames containing hands and return index of hand gestures with associated hand landmarks and timing information."""
     # Open video file and load as video capture object
@@ -52,7 +53,7 @@ def detect_hand_gestures_in_video(video_path: str,
         frame_rgb = convert_frame_to_rgb(frame)
         
         # Process the frame to detect hands
-        results = detect_hands(frame_rgb, hands_detection_model, **kwargs)
+        results = detect_hands(frame_rgb, hands_detection_model)
         
         # Check if hands were detected
         if results.multi_hand_landmarks:
@@ -94,6 +95,7 @@ def detect_gesture_apices(gestures: dict) -> dict:
         gesture_apices[idx]["max_extension_timestamp"] = max_extension_time
     return gesture_apices
 
-hands_detection_model = get_hands_detection_model()
+hands_detection_model = get_hands_detection_model(min_detection_confidence=0.75)
 gestures = detect_hand_gestures_in_video("data/video.mp4", hands_detection_model)
 gesture_apices = detect_gesture_apices(gestures)
+apex_timestamps = [mean(gesture_apex.values()) for gesture_apex in gesture_apices.values()]

@@ -33,7 +33,9 @@ def detect_hands(rgb_image, model: mp.solutions.hands.Hands):
 def detect_hand_gestures_in_video(video_path: str,
                                   hands_detection_model: mp.solutions.hands.Hands,
                                   minimum_frames_per_gesture: int = 50,
-                                  maximum_frames_per_gesture: int = 100
+                                  maximum_frames_per_gesture: int = 100,
+                                  start_bound: float = 0.0,
+                                  end_bound: float=None,
                                   ):
     """Detect video frames containing hands and return index of hand gestures with associated hand landmarks and timing information."""
     # Open video file and load as video capture object
@@ -48,6 +50,13 @@ def detect_hand_gestures_in_video(video_path: str,
         if not ret:
             break
         
+        # Get frame timestamp, skip if out of bounds
+        frame_timestamp = get_frame_timestamp_in_seconds(cap)
+        if frame_timestamp < start_bound:
+            continue
+        if end_bound and frame_timestamp > end_bound:
+            continue
+        
         # Convert the frame to RGB format
         frame_rgb = convert_frame_to_rgb(frame)
         
@@ -57,7 +66,7 @@ def detect_hand_gestures_in_video(video_path: str,
         # Check if hands were detected
         if results.multi_hand_landmarks:
             # Increment new gesture or start new gesture if maximum length reached
-            if not hand_gesture_detected or len(gestures[gesture_index]) >= maximum_frames_per_gesture:
+            if not hand_gesture_detected or (maximum_frames_per_gesture and len(gestures[gesture_index]) >= maximum_frames_per_gesture):
                 gesture_index += 1
             hand_gesture_detected = True
 
@@ -66,14 +75,15 @@ def detect_hand_gestures_in_video(video_path: str,
                 # Extract hand shape as (x, y, z) coordinates
                 hand_shape = [np.array([lm.x, lm.y, lm.z]) for lm in hand_landmarks.landmark]
                 gestures[gesture_index].append({
-                    "timestamp": get_frame_timestamp_in_seconds(cap),
+                    "timestamp": frame_timestamp,
                     "hand_shape": hand_shape
                 })
         else:
             hand_gesture_detected = False
 
     # Filter out gestures appearing in fewer than minimum N frames (potential false positives)
-    gestures = {idx: gesture for idx, gesture in gestures.items() if len(gesture) >= minimum_frames_per_gesture}
+    if minimum_frames_per_gesture > 0:
+        gestures = {idx: gesture for idx, gesture in gestures.items() if len(gesture) >= minimum_frames_per_gesture}
 
     return gestures
 

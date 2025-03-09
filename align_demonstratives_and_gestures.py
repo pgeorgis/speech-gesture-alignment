@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from collections import defaultdict
 from statistics import mean
 from typing import Callable
 
@@ -76,7 +77,7 @@ add_subtitles_to_video(VIDEO_PATH, FULL_SUBTITLES_FILE_PATH, subtitle_language="
 hands_detection_model = get_hands_detection_model(min_detection_confidence=0.75)
 
 # Detect hand gestures within range of demonstratives and find apices of each
-all_gestures_within_bounds_of_demonstratives = {}
+all_gestures_within_bounds_of_demonstratives = defaultdict(list)
 max_seconds_bounds = 0.5
 seen_gesture_count = 0
 for i, entry in enumerate(demonstrative_timings):
@@ -94,8 +95,17 @@ for i, entry in enumerate(demonstrative_timings):
     )
     logger.info(f"Found {len(gestures)} gestures within bounds of <{word}> (bounds: {start_bound}-{end_bound})")
     for gesture_n, gesture_entry in gestures.items():
-        seen_gesture_count += 1
-        all_gestures_within_bounds_of_demonstratives[seen_gesture_count] = gesture_entry
+        last_gesture_timestamp = all_gestures_within_bounds_of_demonstratives[seen_gesture_count][-1]['timestamp'] if seen_gesture_count > 0 else 0
+        if seen_gesture_count == 0 or gesture_entry[0]['timestamp'] > last_gesture_timestamp:
+            seen_gesture_count += 1
+        all_gestures_within_bounds_of_demonstratives[seen_gesture_count].extend(
+            [
+                gesture_frame
+                for gesture_frame in gesture_entry
+                if gesture_frame["timestamp"] > last_gesture_timestamp
+            ]
+        )
+        all_gestures_within_bounds_of_demonstratives[seen_gesture_count].sort(key=lambda x: x['timestamp'])
 gesture_apices = detect_gesture_apices(all_gestures_within_bounds_of_demonstratives)
 
 # Get averaged timestamp of each gesture's apex candidates

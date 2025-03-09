@@ -9,6 +9,8 @@ ASR_MODEL_PATH = os.path.join("models", "de", "vosk-model-de-0.21")  # TODO mode
 AUDIO_PATH = os.path.join("data", "audio.wav")
 TRANCRIPT_PATH = os.path.join("data", "transcription.json")
 VIDEO_PATH = os.path.join("data", "video.mp4")
+DEMONSTRATIVES_SUBTITLES_FILE_PATH = os.path.join("data", "demonstratives.srt")
+FULL_SUBTITLES_FILE_PATH = os.path.join("data", "full_subtitles.srt")
 
 # KEYS IN ASR RESULTS
 ASR_TIMED_RESULTS_KEY = "result"

@@ -1,3 +1,4 @@
+ffmpeg-python
 mediapipe
 numpy
 opencv-python

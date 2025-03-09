@@ -3,7 +3,8 @@ import os
 from statistics import mean
 from typing import Callable
 
-from constants import (ASR_MODEL_PATH, AUDIO_PATH, DEMONSTRATIVE_PRONOUNS,
+from constants import (ASR_MODEL_PATH, ASR_TIMED_RESULTS_KEY, AUDIO_PATH,
+                       DEMONSTRATIVE_PRONOUNS, TOKEN_KEY, TOKEN_ONSET_KEY,
                        TRANCRIPT_PATH, VIDEO_PATH)
 from extract_gesture import (detect_gesture_apices,
                              detect_hand_gestures_in_video,
@@ -14,9 +15,9 @@ from process_video import extract_frames_by_timestamp
 def get_word_onsets_from_asr_results(asr_results: dict, filter_func: Callable) -> list:
     """Get word onset timings for selected words in ASR results."""
     filtered_word_timings = []
-    for entry in asr_results["result"]:
-        if filter_func(entry.get("word", "")):
-            filtered_word_timings.append((entry.get("word"), entry.get("start")))
+    for entry in asr_results[ASR_TIMED_RESULTS_KEY]:
+        if filter_func(entry.get(TOKEN_KEY, "")):
+            filtered_word_timings.append((entry.get(TOKEN_KEY), entry.get(TOKEN_ONSET_KEY)))
     return filtered_word_timings
 
 

@@ -57,13 +57,13 @@ gestures = detect_hand_gestures_in_video(VIDEO_PATH, hands_detection_model)
 gesture_apices = detect_gesture_apices(gestures)
 
 # Get averaged timestamp of each gesture's apex candidates
-#apex_timestamps = {idx: mean(gesture_apex.values()) for idx, gesture_apex in gesture_apices.items()}
+apex_timestamps = {idx: mean(gesture_apex.values()) for idx, gesture_apex in gesture_apices.items()}
 # Get timestamp of each gesture's apex candidates
-apex_timestamps = {
-    (idx, apex_type): apex_timestamp
-    for idx, gesture in gesture_apices.items()
-    for (apex_type, apex_timestamp) in gesture.items()
-}
+# apex_timestamps = {
+#     (idx, apex_type): apex_timestamp
+#     for idx, gesture in gesture_apices.items()
+#     for (apex_type, apex_timestamp) in gesture.items()
+# }
 
 # Get timestamps of demonstrative pronoun onsets from ASR results
 demonstrative_timings = get_word_timings_from_asr_results(

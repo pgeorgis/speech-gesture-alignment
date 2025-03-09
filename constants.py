@@ -21,7 +21,8 @@ TOKEN_END_KEY = "end"
 # DEMONSTRATIVE PRONOUNS TO FILTER IN TRANSCRIPTION
 DEMONSTRATIVE_PRONOUNS = {
     r"das$",
-    #r"da(hinte[nr]|rüber)$",
+    r"dem$",
+    r"da(hinte[nr]|rüber)?$",
     r"dies(e([mnrs])?)?$",
 }
 DEMONSTRATIVE_PRONOUNS = {re.compile(pattern, re.IGNORECASE) for pattern in DEMONSTRATIVE_PRONOUNS}

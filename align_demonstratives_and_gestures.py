@@ -2,7 +2,10 @@ import json
 import logging
 from typing import Callable
 
-from constants import (ASR_MODEL_PATH, ASR_TIMED_RESULTS_KEY, AUDIO_PATH,
+import pandas as pd
+
+from constants import (ALIGNED_GESTURES_TSV, ASR_MODEL_PATH,
+                       ASR_TIMED_RESULTS_KEY, AUDIO_PATH,
                        CORRECTED_TRANCRIPT_PATH, DEMONSTRATIVE_PRONOUNS,
                        DEMONSTRATIVES_SUBTITLES_FILE_PATH,
                        FULL_SUBTITLES_FILE_PATH, GESTURES_JSON, TOKEN_KEY,
@@ -29,18 +32,25 @@ def find_nearest_gesture_to_words(word_timings: list,
                                   gesture_apices: dict,
                                   key=TOKEN_ONSET_KEY,
                                   max_offset_from_word: float | None = None,
-                                  ) -> dict:
+                                  ) -> list:
     """Find nearest gesture (by apex timestamp) to each word's onset."""
-    nearest_gestures = {}
+    nearest_gestures = []
     for entry in word_timings:
-        word_time = entry[key]
-        word = entry[TOKEN_KEY]
+        entry_copy = entry.copy()
+        word_time = entry_copy[key]
         nearest_gesture = min(gesture_apices.keys(), key=lambda x: abs(word_time - gesture_apices[x]))
-        gesture_apex = gesture_apices[nearest_gesture]
-        if max_offset_from_word and abs(word_time - gesture_apex) > max_offset_from_word:
-            nearest_gestures[(word, word_time)] = None
+        nearest_gesture_apex = gesture_apices[nearest_gesture]
+        nearest_gesture_offset = word_time - nearest_gesture_apex
+        if max_offset_from_word and abs(nearest_gesture_offset) > max_offset_from_word:
+            entry_copy["nearest_gesture"] = None
+            entry_copy["nearest_gesture_apex"] = None
+            entry_copy["nearest_gesture_offset"] = None
         else:
-            nearest_gestures[(word, word_time)] = (nearest_gesture, gesture_apex)
+            entry_copy["nearest_gesture"] = nearest_gesture
+            entry_copy["nearest_gesture_apex"] = nearest_gesture_apex
+            entry_copy["nearest_gesture_offset"] = nearest_gesture_offset
+        nearest_gestures.append(entry_copy)
+    
     return nearest_gestures
 
 
@@ -106,3 +116,7 @@ nearest_gestures_to_demonstratives = find_nearest_gesture_to_words(
     key=TOKEN_ONSET_KEY,
     max_offset_from_word=0.75,
 )
+# Assemble aligned demonstratives and gestures into dataframe
+aligned_word_gesture_df = pd.DataFrame(nearest_gestures_to_demonstratives)
+# Write to TSV file
+aligned_word_gesture_df.to_csv(ALIGNED_GESTURES_TSV, index=False, sep="\t")

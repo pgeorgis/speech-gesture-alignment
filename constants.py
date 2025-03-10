@@ -14,6 +14,7 @@ VIDEO_FRAMES_OUTDIR = os.path.join("data", "video_frames")
 DEMONSTRATIVES_SUBTITLES_FILE_PATH = os.path.join("data", "subtitles", "demonstratives.srt")
 FULL_SUBTITLES_FILE_PATH = os.path.join("data", "subtitles", "full_subtitles.srt")
 GESTURES_JSON = os.path.join("data", "gestures", "gestures.json")
+ALIGNED_GESTURES_TSV = os.path.join("data", "gestures", "aligned_gestures.tsv")
 
 # KEYS IN ASR RESULTS
 ASR_TIMED_RESULTS_KEY = "result"

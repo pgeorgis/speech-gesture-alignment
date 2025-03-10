@@ -2,5 +2,6 @@ ffmpeg-python
 mediapipe
 numpy
 opencv-python
+pandas
 pydub
 vosk

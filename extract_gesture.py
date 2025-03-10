@@ -1,5 +1,8 @@
+import json
 import logging
+import os
 from collections import defaultdict
+from copy import deepcopy
 
 import cv2
 import mediapipe as mp
@@ -202,3 +205,17 @@ class GestureDetector:
         if combine_overlapping:
             gesture_events = combine_overlapping_gestures(gesture_events)
         return gesture_events
+
+    def dump_gesture_events(self, outfile, gesture_events=None):
+        """Dump gesture event data to json outfile."""
+        os.makedirs(os.path.dirname(outfile), exist_ok=True)
+        if gesture_events is None:
+            gesture_events = self.gesture_frames
+        gesture_frames_serializable = deepcopy(gesture_events)
+        for _, gesture_event in gesture_frames_serializable.items():
+            gesture_event["hand_shape"] = {
+                hand_landmark_i: coords.tolist()
+                for hand_landmark_i, coords in enumerate(gesture_event["hand_shape"])
+            }
+        with open(outfile, "w") as outf:
+            json.dump(gesture_frames_serializable, outf, indent=4)

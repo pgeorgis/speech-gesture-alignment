@@ -11,6 +11,7 @@ TRANCRIPT_PATH = os.path.join("data", "transcription.json")
 VIDEO_PATH = os.path.join("data", "video.mp4")
 DEMONSTRATIVES_SUBTITLES_FILE_PATH = os.path.join("data", "demonstratives.srt")
 FULL_SUBTITLES_FILE_PATH = os.path.join("data", "full_subtitles.srt")
+GESTURES_JSON = os.path.join("data", "gestures.json")
 
 # KEYS IN ASR RESULTS
 ASR_TIMED_RESULTS_KEY = "result"

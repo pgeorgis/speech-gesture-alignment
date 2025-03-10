@@ -76,6 +76,7 @@ add_subtitles_to_video(VIDEO_PATH, FULL_SUBTITLES_FILE_PATH, subtitle_language="
 # Detect hand gestures within range of demonstratives and find apices of each
 max_seconds_bounds = 0.5
 gesture_detector = GestureDetector(VIDEO_PATH)
+gesture_detector.dump_gesture_events(GESTURES_JSON)
 gesture_events = gesture_detector.search_for_gestures_near_specific_words(
     word_timings=demonstrative_timings,
     max_window=0.5,

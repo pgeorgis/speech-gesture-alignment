@@ -43,7 +43,7 @@ def find_nearest_gesture_to_words(word_timings: list,
         word_time = entry_copy[key]
         nearest_gesture = min(gesture_apices.keys(), key=lambda x: abs(word_time - gesture_apices[x]))
         nearest_gesture_apex = gesture_apices[nearest_gesture]
-        nearest_gesture_offset = word_time - nearest_gesture_apex
+        nearest_gesture_offset = nearest_gesture_apex - word_time
         if max_offset_from_word and abs(nearest_gesture_offset) > max_offset_from_word:
             entry_copy["nearest_gesture"] = None
             entry_copy["nearest_gesture_apex"] = None

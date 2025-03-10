@@ -130,4 +130,5 @@ create_gesture_word_alignment_density_plot(
     offset_key="nearest_gesture_offset",
     title="Alignment of gesture apices to demonstratives",
     outfile=GESTURE_ALIGNMENT_DENSITY_PLOT,
+    breakdown_per_word=False,
 )

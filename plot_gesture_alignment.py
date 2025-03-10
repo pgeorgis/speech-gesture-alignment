@@ -9,6 +9,7 @@ def create_gesture_word_alignment_density_plot(data: pd.DataFrame,
                                                offset_key: str,
                                                outfile: str,
                                                title: str = None,
+                                               breakdown_per_word: bool = False,
                                                ):
     """Plot density plot with relative alignments of gesture apices to words (word onsets)."""
     # Drop NA entries from dataframe to remove entries without aligned gesture
@@ -22,8 +23,9 @@ def create_gesture_word_alignment_density_plot(data: pd.DataFrame,
 
     # Plot the density distributions per word
     plt.figure(figsize=(8, 6))
-    for word in words:
-        sns.kdeplot(data[data[TOKEN_KEY] == word][offset_key], fill=True, label=f"Apex to <{word}> onset", alpha=0.6, warn_singular=False)
+    if breakdown_per_word:
+        for word in words:
+            sns.kdeplot(data[data[TOKEN_KEY] == word][offset_key], fill=True, label=f"Apex to <{word}> onset", alpha=0.6, warn_singular=False)
     # Plot total distribution
     sns.kdeplot(data[offset_key], fill=True, label=f"Apex to any demonstrative onset", alpha=0.6)
     # Add axis labels, plot title, legend

@@ -9,7 +9,9 @@ from constants import (ALIGNED_GESTURES_TSV, ASR_MODEL_PATH,
                        DEMONSTRATIVES_SUBTITLES_FILE_PATH,
                        FULL_SUBTITLES_FILE_PATH,
                        GESTURE_ALIGNMENT_DENSITY_PLOT, GESTURES_JSON,
-                       POS_TAG_KEY, TOKEN_ONSET_KEY, TRANCRIPT_PATH,
+                       NEAREST_GESTURE_APEX_KEY, NEAREST_GESTURE_KEY,
+                       NEAREST_GESTURE_OFFSET_KEY, POS_TAG_KEY, TOKEN_END_KEY,
+                       TOKEN_KEY, TOKEN_ONSET_KEY, TRANCRIPT_PATH,
                        VIDEO_FRAMES_OUTDIR, VIDEO_PATH)
 from extract_gesture import GestureDetector
 from extract_speech import get_word_timings_from_asr_results, speech_to_text
@@ -36,13 +38,13 @@ def find_nearest_gesture_to_words(word_timings: list,
         nearest_gesture_apex = gesture_apices[nearest_gesture]
         nearest_gesture_offset = nearest_gesture_apex - word_time
         if max_offset_from_word and abs(nearest_gesture_offset) > max_offset_from_word:
-            entry_copy["nearest_gesture"] = None
-            entry_copy["nearest_gesture_apex"] = None
-            entry_copy["nearest_gesture_offset"] = None
+            entry_copy[NEAREST_GESTURE_KEY] = None
+            entry_copy[NEAREST_GESTURE_APEX_KEY] = None
+            entry_copy[NEAREST_GESTURE_OFFSET_KEY] = None
         else:
-            entry_copy["nearest_gesture"] = nearest_gesture
-            entry_copy["nearest_gesture_apex"] = nearest_gesture_apex
-            entry_copy["nearest_gesture_offset"] = nearest_gesture_offset
+            entry_copy[NEAREST_GESTURE_KEY] = nearest_gesture
+            entry_copy[NEAREST_GESTURE_APEX_KEY] = nearest_gesture_apex
+            entry_copy[NEAREST_GESTURE_OFFSET_KEY] = nearest_gesture_offset
         nearest_gestures.append(entry_copy)
 
     return nearest_gestures
@@ -115,7 +117,15 @@ nearest_gestures_to_demonstratives = find_nearest_gesture_to_words(
 # Assemble aligned demonstratives and gestures into dataframe
 aligned_word_gesture_df = pd.DataFrame(nearest_gestures_to_demonstratives)
 # Write to TSV file
-aligned_word_gesture_df.to_csv(ALIGNED_GESTURES_TSV, index=False, sep="\t")
+aligned_word_gesture_df.to_csv(
+    ALIGNED_GESTURES_TSV,
+    columns=[
+        TOKEN_KEY, TOKEN_ONSET_KEY, TOKEN_END_KEY, POS_TAG_KEY,
+        NEAREST_GESTURE_KEY, NEAREST_GESTURE_APEX_KEY, NEAREST_GESTURE_OFFSET_KEY
+    ],
+    index=False,
+    sep="\t"
+)
 create_gesture_word_alignment_density_plot(
     aligned_word_gesture_df,
     offset_key="nearest_gesture_offset",

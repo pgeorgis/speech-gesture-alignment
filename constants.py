@@ -25,6 +25,11 @@ TOKEN_ONSET_KEY = "start"
 TOKEN_END_KEY = "end"
 POS_TAG_KEY = "pos_tag"
 
+# GESTURE KEYS
+NEAREST_GESTURE_KEY = "nearest_gesture"
+NEAREST_GESTURE_APEX_KEY = "nearest_gesture_apex"
+NEAREST_GESTURE_OFFSET_KEY = "nearest_gesture_offset"
+
 # DEMONSTRATIVE PRONOUNS TO FILTER IN TRANSCRIPTION
 DEMONSTRATIVE_PRONOUNS = {
     r"das$",

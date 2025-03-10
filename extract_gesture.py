@@ -8,7 +8,9 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
-from constants import TOKEN_END_KEY, TOKEN_KEY, TOKEN_ONSET_KEY
+from constants import (NEAREST_GESTURE_APEX_KEY, NEAREST_GESTURE_KEY,
+                       NEAREST_GESTURE_OFFSET_KEY, TOKEN_END_KEY, TOKEN_KEY,
+                       TOKEN_ONSET_KEY)
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +102,32 @@ def combine_overlapping_gestures(gesture_events):
             )
             combined_gestures[seen_gesture_count].sort(key=lambda x: x['timestamp'])
     return combined_gestures
+
+
+def find_nearest_gesture_to_words(word_timings: list,
+                                  gesture_apices: dict,
+                                  key=TOKEN_ONSET_KEY,
+                                  max_offset_from_word: float | None = None,
+                                  ) -> list:
+    """Find nearest gesture (by apex timestamp) to each word's onset."""
+    nearest_gestures = []
+    for entry in word_timings:
+        entry_copy = entry.copy()
+        word_time = entry_copy[key]
+        nearest_gesture = min(gesture_apices.keys(), key=lambda x: abs(word_time - gesture_apices[x]))
+        nearest_gesture_apex = gesture_apices[nearest_gesture]
+        nearest_gesture_offset = nearest_gesture_apex - word_time
+        if max_offset_from_word and abs(nearest_gesture_offset) > max_offset_from_word:
+            entry_copy[NEAREST_GESTURE_KEY] = None
+            entry_copy[NEAREST_GESTURE_APEX_KEY] = None
+            entry_copy[NEAREST_GESTURE_OFFSET_KEY] = None
+        else:
+            entry_copy[NEAREST_GESTURE_KEY] = nearest_gesture
+            entry_copy[NEAREST_GESTURE_APEX_KEY] = nearest_gesture_apex
+            entry_copy[NEAREST_GESTURE_OFFSET_KEY] = nearest_gesture_offset
+        nearest_gestures.append(entry_copy)
+
+    return nearest_gestures
 
 
 class GestureDetector:

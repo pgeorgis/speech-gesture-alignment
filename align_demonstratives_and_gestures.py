@@ -13,7 +13,7 @@ from constants import (ALIGNED_GESTURES_TSV, ASR_MODEL_PATH,
                        NEAREST_GESTURE_OFFSET_KEY, POS_TAG_KEY, TOKEN_END_KEY,
                        TOKEN_KEY, TOKEN_ONSET_KEY, TRANCRIPT_PATH,
                        VIDEO_FRAMES_OUTDIR, VIDEO_PATH)
-from extract_gesture import GestureDetector
+from extract_gesture import GestureDetector, find_nearest_gesture_to_words
 from extract_speech import get_word_timings_from_asr_results, speech_to_text
 from gesture_apex import detect_gesture_apices
 from plot_gesture_alignment import create_gesture_word_alignment_density_plot
@@ -22,32 +22,6 @@ from process_video import extract_frames_by_timestamp
 from subtitles import add_subtitles_to_video, json_to_srt, write_srt
 
 logger = logging.getLogger(__name__)
-
-
-def find_nearest_gesture_to_words(word_timings: list,
-                                  gesture_apices: dict,
-                                  key=TOKEN_ONSET_KEY,
-                                  max_offset_from_word: float | None = None,
-                                  ) -> list:
-    """Find nearest gesture (by apex timestamp) to each word's onset."""
-    nearest_gestures = []
-    for entry in word_timings:
-        entry_copy = entry.copy()
-        word_time = entry_copy[key]
-        nearest_gesture = min(gesture_apices.keys(), key=lambda x: abs(word_time - gesture_apices[x]))
-        nearest_gesture_apex = gesture_apices[nearest_gesture]
-        nearest_gesture_offset = nearest_gesture_apex - word_time
-        if max_offset_from_word and abs(nearest_gesture_offset) > max_offset_from_word:
-            entry_copy[NEAREST_GESTURE_KEY] = None
-            entry_copy[NEAREST_GESTURE_APEX_KEY] = None
-            entry_copy[NEAREST_GESTURE_OFFSET_KEY] = None
-        else:
-            entry_copy[NEAREST_GESTURE_KEY] = nearest_gesture
-            entry_copy[NEAREST_GESTURE_APEX_KEY] = nearest_gesture_apex
-            entry_copy[NEAREST_GESTURE_OFFSET_KEY] = nearest_gesture_offset
-        nearest_gestures.append(entry_copy)
-
-    return nearest_gestures
 
 
 def is_demonstrative(word_entry):

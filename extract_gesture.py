@@ -8,7 +8,7 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
-from constants import TOKEN_KEY, TOKEN_ONSET_KEY
+from constants import TOKEN_END_KEY, TOKEN_KEY, TOKEN_ONSET_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -191,7 +191,7 @@ class GestureDetector:
         gesture_events = []
         for i, entry in enumerate(word_timings):
             start_bound = max(0, entry[TOKEN_ONSET_KEY] - max_window)
-            end_bound = entry[TOKEN_ONSET_KEY] + max_window
+            end_bound = entry[TOKEN_END_KEY] + max_window
             word = entry[TOKEN_KEY]
             logger.info(f"Searching for gestures near <{word}> (bounds: {start_bound}-{end_bound})")
             gestures = self.extract_gestures_by_time_bounds(

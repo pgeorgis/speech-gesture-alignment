@@ -46,6 +46,7 @@ demonstrative_timings = get_word_timings_from_asr_results(
     asr_results,
     filter_func=is_demonstrative,
 )
+all_word_timings = asr_results[ASR_TIMED_RESULTS_KEY]
 
 # Create subtitle file with demonstratives only
 # Add subtitles to video for demonstratives only
@@ -60,17 +61,16 @@ write_srt(full_subtitles, FULL_SUBTITLES_FILE_PATH)
 add_subtitles_to_video(VIDEO_PATH, FULL_SUBTITLES_FILE_PATH, subtitle_language="de", soft_subtitle=True)
 
 
-# Detect hand gestures within range of demonstratives and find apices of each
+# Detect hand gestures within range of individual words and find apices of each
 max_seconds_bounds = 0.5
 gesture_detector = GestureDetector(VIDEO_PATH)
 gesture_detector.dump_gesture_events(GESTURES_JSON)
 logger.info(f"Wrote full gesture json to {GESTURES_JSON}")
 gesture_events = gesture_detector.search_for_gestures_near_specific_words(
-    word_timings=demonstrative_timings,
+    word_timings=all_word_timings,
     max_window=max_seconds_bounds,
     combine_overlapping=True,
 )
-logger.info(f"Found {len(gesture_events)} gesture events within bounds of demonstratives")
 # Get averaged timestamp of each gesture's apex candidates
 gesture_apices = detect_gesture_apices(gesture_events, average=True)
 
@@ -83,12 +83,13 @@ extract_frames_by_timestamp(
 
 # Find nearest gesture apex to each word of interest
 nearest_gestures_to_demonstratives = find_nearest_gesture_to_words(
-    demonstrative_timings,
+    all_word_timings,
     gesture_apices,
     key=TOKEN_ONSET_KEY,
     max_offset_from_word=0.75,
+    filter_func=is_demonstrative,
 )
-# Assemble aligned demonstratives and gestures into dataframe
+# Assemble aligned words and gestures into dataframe
 aligned_word_gesture_df = pd.DataFrame(nearest_gestures_to_demonstratives)
 # Write to TSV file
 aligned_word_gesture_df.to_csv(

@@ -3,6 +3,7 @@ import logging
 import os
 from collections import defaultdict
 from copy import deepcopy
+from typing import Callable
 
 import cv2
 import mediapipe as mp
@@ -108,10 +109,13 @@ def find_nearest_gesture_to_words(word_timings: list,
                                   gesture_apices: dict,
                                   key=TOKEN_ONSET_KEY,
                                   max_offset_from_word: float | None = None,
+                                  filter_func: Callable | None = None,
                                   ) -> list:
     """Find nearest gesture (by apex timestamp) to each word's onset."""
     nearest_gestures = []
     for entry in word_timings:
+        if filter_func and not filter_func(entry):
+            continue
         entry_copy = entry.copy()
         word_time = entry_copy[key]
         nearest_gesture = min(gesture_apices.keys(), key=lambda x: abs(word_time - gesture_apices[x]))

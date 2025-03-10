@@ -95,3 +95,9 @@ extract_frames_by_timestamp(
     output_folder=VIDEO_FRAMES_OUTDIR
 )
 
+# Find nearest gesture apex to each word of interest
+nearest_gestures_to_demonstratives = find_nearest_gesture_to_words(
+    demonstrative_timings,
+    gesture_apices,
+    key=TOKEN_ONSET_KEY,
+)

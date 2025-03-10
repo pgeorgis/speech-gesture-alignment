@@ -76,22 +76,12 @@ add_subtitles_to_video(VIDEO_PATH, FULL_SUBTITLES_FILE_PATH, subtitle_language="
 # Detect hand gestures within range of demonstratives and find apices of each
 max_seconds_bounds = 0.5
 gesture_detector = GestureDetector(VIDEO_PATH)
-gesture_events = []
-for i, entry in enumerate(demonstrative_timings):
-    start_bound = max(0, entry[TOKEN_ONSET_KEY] - max_seconds_bounds)
-    end_bound = entry[TOKEN_ONSET_KEY] + max_seconds_bounds
-    word = entry[TOKEN_KEY]
-    logger.info(f"Searching for gestures near <{word}> (bounds: {start_bound}-{end_bound})")
-    gestures = gesture_detector.extract_gestures_by_time_bounds(
-        start_bound=start_bound,
-        end_bound=end_bound,
-        maximum_frames_per_gesture=None,
-        minimum_frames_per_gesture=10,
-    )
-    logger.info(f"Found {len(gestures)} gestures within bounds of <{word}> (bounds: {start_bound}-{end_bound})")
-    gesture_events.append(gestures)
-gesture_events = combine_overlapping_gestures(gesture_events)
-logger.info(f"Found {len(gesture_events)} gesture events within bounds of")
+gesture_events = gesture_detector.search_for_gestures_near_specific_words(
+    word_timings=demonstrative_timings,
+    max_window=0.5,
+    combine_overlapping=True,
+)
+logger.info(f"Found {len(gesture_events)} gesture events within bounds of demonstratives")
 gesture_apices = detect_gesture_apices(gesture_events)
 
 # Get averaged timestamp of each gesture's apex candidates

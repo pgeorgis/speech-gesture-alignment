@@ -1,10 +1,14 @@
+import logging
 from collections import defaultdict
 
 import cv2
 import mediapipe as mp
 import numpy as np
 
+from constants import TOKEN_KEY, TOKEN_ONSET_KEY
 from process_gesture import find_apex
+
+logger = logging.getLogger(__name__)
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
@@ -190,3 +194,28 @@ class GestureDetector:
         
         return gestures
 
+    def search_for_gestures_near_specific_words(self,
+                                                word_timings: list,
+                                                max_window: float = 0.5,
+                                                maximum_frames_per_gesture: int | None = None,
+                                                minimum_frames_per_gesture: int = 10,
+                                                combine_overlapping: bool = True,
+                                                ):
+        """Search for unique gesture events adjacent to specific words in speech recognition results."""
+        gesture_events = []
+        for i, entry in enumerate(word_timings):
+            start_bound = max(0, entry[TOKEN_ONSET_KEY] - max_window)
+            end_bound = entry[TOKEN_ONSET_KEY] + max_window
+            word = entry[TOKEN_KEY]
+            logger.info(f"Searching for gestures near <{word}> (bounds: {start_bound}-{end_bound})")
+            gestures = self.extract_gestures_by_time_bounds(
+                start_bound=start_bound,
+                end_bound=end_bound,
+                maximum_frames_per_gesture=maximum_frames_per_gesture,
+                minimum_frames_per_gesture=minimum_frames_per_gesture,
+            )
+            logger.info(f"Found {len(gestures)} gestures within bounds of <{word}> (bounds: {start_bound}-{end_bound})")
+            gesture_events.append(gestures)
+        if combine_overlapping:
+            gesture_events = combine_overlapping_gestures(gesture_events)
+        return gesture_events

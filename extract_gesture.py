@@ -76,6 +76,26 @@ def detect_video_frames_with_hand_gestures(video_path: str,
     return gesture_frames
 
 
+def combine_overlapping_gestures(gesture_events):
+    """Combine lists of potentially overlapping gesture events into non-overlapping gesture events."""
+    combined_gestures = defaultdict(list)
+    seen_gesture_count = 0
+    for gesture_event in gesture_events:
+        for _, gesture_entry in gesture_event.items():
+            last_gesture_timestamp = combined_gestures[seen_gesture_count][-1]['timestamp'] if seen_gesture_count > 0 else 0
+            if seen_gesture_count == 0 or gesture_entry[0]['timestamp'] > last_gesture_timestamp:
+                seen_gesture_count += 1
+            combined_gestures[seen_gesture_count].extend(
+                [
+                    gesture_frame
+                    for gesture_frame in gesture_entry
+                    if gesture_frame["timestamp"] > last_gesture_timestamp
+                ]
+            )
+            combined_gestures[seen_gesture_count].sort(key=lambda x: x['timestamp'])
+    return combined_gestures
+
+
 def detect_gesture_apices(gestures: dict) -> dict:
     """Return a dictionary of gesture indices with their apex timestamps according to 3 criteria:
     - minimum speed (sudden stop or change in direction),

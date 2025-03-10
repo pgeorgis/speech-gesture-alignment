@@ -10,7 +10,8 @@ from constants import (ASR_MODEL_PATH, ASR_TIMED_RESULTS_KEY, AUDIO_PATH,
                        DEMONSTRATIVES_SUBTITLES_FILE_PATH,
                        FULL_SUBTITLES_FILE_PATH, GESTURES_JSON, TOKEN_KEY,
                        TOKEN_ONSET_KEY, TRANCRIPT_PATH, VIDEO_PATH)
-from extract_gesture import GestureDetector, detect_gesture_apices
+from extract_gesture import (GestureDetector, combine_overlapping_gestures,
+                             detect_gesture_apices)
 from extract_speech import speech_to_text
 from process_video import extract_frames_by_timestamp
 from subtitles import add_subtitles_to_video, json_to_srt, write_srt
@@ -71,11 +72,11 @@ full_subtitles = json_to_srt(corrected_asr_results[ASR_TIMED_RESULTS_KEY])
 write_srt(full_subtitles, FULL_SUBTITLES_FILE_PATH)
 add_subtitles_to_video(VIDEO_PATH, FULL_SUBTITLES_FILE_PATH, subtitle_language="de", soft_subtitle=True)
 
+
 # Detect hand gestures within range of demonstratives and find apices of each
-all_gestures_within_bounds_of_demonstratives = defaultdict(list)
 max_seconds_bounds = 0.5
-seen_gesture_count = 0
 gesture_detector = GestureDetector(VIDEO_PATH)
+gesture_events = []
 for i, entry in enumerate(demonstrative_timings):
     start_bound = max(0, entry[TOKEN_ONSET_KEY] - max_seconds_bounds)
     end_bound = entry[TOKEN_ONSET_KEY] + max_seconds_bounds
@@ -88,19 +89,10 @@ for i, entry in enumerate(demonstrative_timings):
         minimum_frames_per_gesture=10,
     )
     logger.info(f"Found {len(gestures)} gestures within bounds of <{word}> (bounds: {start_bound}-{end_bound})")
-    for gesture_n, gesture_entry in gestures.items():
-        last_gesture_timestamp = all_gestures_within_bounds_of_demonstratives[seen_gesture_count][-1]['timestamp'] if seen_gesture_count > 0 else 0
-        if seen_gesture_count == 0 or gesture_entry[0]['timestamp'] > last_gesture_timestamp:
-            seen_gesture_count += 1
-        all_gestures_within_bounds_of_demonstratives[seen_gesture_count].extend(
-            [
-                gesture_frame
-                for gesture_frame in gesture_entry
-                if gesture_frame["timestamp"] > last_gesture_timestamp
-            ]
-        )
-        all_gestures_within_bounds_of_demonstratives[seen_gesture_count].sort(key=lambda x: x['timestamp'])
-gesture_apices = detect_gesture_apices(all_gestures_within_bounds_of_demonstratives)
+    gesture_events.append(gestures)
+gesture_events = combine_overlapping_gestures(gesture_events)
+logger.info(f"Found {len(gesture_events)} gesture events within bounds of")
+gesture_apices = detect_gesture_apices(gesture_events)
 
 # Get averaged timestamp of each gesture's apex candidates
 apex_timestamps = {idx: mean(gesture_apex.values()) for idx, gesture_apex in gesture_apices.items()}

@@ -1,6 +1,5 @@
 import logging
 import os
-import re
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(name)s %(levelname)s: %(message)s')
 
@@ -31,13 +30,6 @@ NEAREST_GESTURE_APEX_KEY = "nearest_gesture_apex"
 NEAREST_GESTURE_OFFSET_KEY = "nearest_gesture_offset"
 
 # DEMONSTRATIVE PRONOUNS TO FILTER IN TRANSCRIPTION
-DEMONSTRATIVE_PRONOUNS = {
-    r"das$",
-    r"dem$",
-    r"da(hinte[nr]|rüber)?$",
-    r"dies(e([mnrs])?)?$",
-}
-DEMONSTRATIVE_PRONOUNS = {re.compile(pattern, re.IGNORECASE) for pattern in DEMONSTRATIVE_PRONOUNS}
 DEMONSTRATIVE_POS = {
     "PDAT",
     "PDS",

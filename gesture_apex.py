@@ -67,12 +67,18 @@ def detect_gesture_apices(gestures: dict, average=False) -> dict:
         timestamps = np.array([entry['timestamp'] for entry in gesture_data])
         hand_shapes = np.array([entry['hand_shape'] for entry in gesture_data])
         min_speed_time, max_accel_time, max_extension_time, max_turn_time = find_apex(hand_shapes, timestamps)
-        gesture_apices[idx]["min_speed_timestamp"] = min_speed_time
-        gesture_apices[idx]["max_acceleration_timestamp"] = max_accel_time
-        gesture_apices[idx]["max_extension_timestamp"] = max_extension_time
-        gesture_apices[idx]["sharpest_direction_change_timestamp"] = max_turn_time
+        gesture_apices[idx]["min_speed"] = min_speed_time
+        gesture_apices[idx]["max_acceleration"] = max_accel_time
+        gesture_apices[idx]["max_extension"] = max_extension_time
+        gesture_apices[idx]["sharpest_direction_change"] = max_turn_time
 
     if average:
         gesture_apices = {idx: mean(gesture_apex.values()) for idx, gesture_apex in gesture_apices.items()}
+    else:
+        gesture_apices = {
+            f"{gesture_idx}-{apex_type}": apex_timestamp
+            for gesture_idx, apex_candidates in gesture_apices.items()
+            for apex_type, apex_timestamp in apex_candidates.items()
+        }
 
     return gesture_apices

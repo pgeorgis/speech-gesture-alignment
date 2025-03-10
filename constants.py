@@ -31,6 +31,7 @@ NEAREST_GESTURE_OFFSET_KEY = "nearest_gesture_offset"
 
 # DEMONSTRATIVE PRONOUNS TO FILTER IN TRANSCRIPTION
 DEMONSTRATIVE_POS = {
-    "PDAT",
-    "PDS",
+    "PDAT",  # demonstrative determiner
+    "PDS",   # demonstrative pronoun
+    "ART",   # article (common mislabel for demonstratives like <das>, <dem>, etc.)
 }

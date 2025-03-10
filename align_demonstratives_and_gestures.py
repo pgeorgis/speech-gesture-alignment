@@ -6,17 +6,19 @@ import pandas as pd
 
 from constants import (ALIGNED_GESTURES_TSV, ASR_MODEL_PATH,
                        ASR_TIMED_RESULTS_KEY, AUDIO_PATH,
-                       CORRECTED_TRANCRIPT_PATH, DEMONSTRATIVE_PRONOUNS,
+                       CORRECTED_TRANCRIPT_PATH, DEMONSTRATIVE_POS,
                        DEMONSTRATIVES_SUBTITLES_FILE_PATH,
-                       FULL_SUBTITLES_FILE_PATH, GESTURES_JSON, TOKEN_KEY,
-                       TOKEN_ONSET_KEY, TRANCRIPT_PATH, VIDEO_FRAMES_OUTDIR,
-                       VIDEO_PATH, GESTURE_ALIGNMENT_DENSITY_PLOT)
+                       FULL_SUBTITLES_FILE_PATH,
+                       GESTURE_ALIGNMENT_DENSITY_PLOT, GESTURES_JSON,
+                       POS_TAG_KEY, TOKEN_ONSET_KEY, TRANCRIPT_PATH,
+                       VIDEO_FRAMES_OUTDIR, VIDEO_PATH)
 from extract_gesture import GestureDetector
 from extract_speech import speech_to_text
 from gesture_apex import detect_gesture_apices
+from plot_gesture_alignment import create_gesture_word_alignment_density_plot
+from pos_tagging import pos_tag_asr_results
 from process_video import extract_frames_by_timestamp
 from subtitles import add_subtitles_to_video, json_to_srt, write_srt
-from plot_gesture_alignment import create_gesture_word_alignment_density_plot
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,7 @@ def get_word_timings_from_asr_results(asr_results: dict, filter_func: Callable) 
     """Get word timings for selected words in ASR results."""
     filtered_word_timings = []
     for entry in asr_results[ASR_TIMED_RESULTS_KEY]:
-        if filter_func(entry.get(TOKEN_KEY, "")):
+        if filter_func(entry):
             filtered_word_timings.append(entry)
     return filtered_word_timings
 
@@ -55,16 +57,18 @@ def find_nearest_gesture_to_words(word_timings: list,
     return nearest_gestures
 
 
-def is_demonstrative(word):
-    """Check if a word matches a demonstrative pronoun regex."""
-    if any(demonstr_regex.match(word) for demonstr_regex in DEMONSTRATIVE_PRONOUNS):
+def is_demonstrative(word_entry):
+    """Check if a word is a demonstrative by POS tag."""
+    pos_tag = word_entry.get(POS_TAG_KEY, "")
+    if pos_tag in DEMONSTRATIVE_POS:
         return True
     return False
 
 
 # Perform speech-to-text conversion
 asr_results = speech_to_text(AUDIO_PATH, model_path=ASR_MODEL_PATH, chunk_duration_seconds=0.1)
-
+# Perform POS tagging on ASR results
+asr_results = pos_tag_asr_results(asr_results, language="de")
 # Write transcription to file
 with open(TRANCRIPT_PATH, "w") as f:
     json.dump(asr_results, f, indent=4)

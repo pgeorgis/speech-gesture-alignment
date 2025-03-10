@@ -19,9 +19,11 @@ GESTURE_ALIGNMENT_DENSITY_PLOT = os.path.join("data", "gestures", "gesture_align
 
 # KEYS IN ASR RESULTS
 ASR_TIMED_RESULTS_KEY = "result"
+ASR_TEXT_KEY = "text"
 TOKEN_KEY = "word"
 TOKEN_ONSET_KEY = "start"
 TOKEN_END_KEY = "end"
+POS_TAG_KEY = "pos_tag"
 
 # DEMONSTRATIVE PRONOUNS TO FILTER IN TRANSCRIPTION
 DEMONSTRATIVE_PRONOUNS = {
@@ -31,3 +33,7 @@ DEMONSTRATIVE_PRONOUNS = {
     r"dies(e([mnrs])?)?$",
 }
 DEMONSTRATIVE_PRONOUNS = {re.compile(pattern, re.IGNORECASE) for pattern in DEMONSTRATIVE_PRONOUNS}
+DEMONSTRATIVE_POS = {
+    "PDAT",
+    "PDS",
+}

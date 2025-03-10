@@ -10,9 +10,9 @@ from constants import (ASR_MODEL_PATH, ASR_TIMED_RESULTS_KEY, AUDIO_PATH,
                        DEMONSTRATIVES_SUBTITLES_FILE_PATH,
                        FULL_SUBTITLES_FILE_PATH, GESTURES_JSON, TOKEN_KEY,
                        TOKEN_ONSET_KEY, TRANCRIPT_PATH, VIDEO_PATH)
-from extract_gesture import (GestureDetector, combine_overlapping_gestures,
-                             detect_gesture_apices)
+from extract_gesture import GestureDetector
 from extract_speech import speech_to_text
+from gesture_apex import detect_gesture_apices
 from process_video import extract_frames_by_timestamp
 from subtitles import add_subtitles_to_video, json_to_srt, write_srt
 

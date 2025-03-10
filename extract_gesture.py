@@ -6,7 +6,6 @@ import mediapipe as mp
 import numpy as np
 
 from constants import TOKEN_KEY, TOKEN_ONSET_KEY
-from process_gesture import find_apex
 
 logger = logging.getLogger(__name__)
 
@@ -99,22 +98,6 @@ def combine_overlapping_gestures(gesture_events):
             combined_gestures[seen_gesture_count].sort(key=lambda x: x['timestamp'])
     return combined_gestures
 
-
-def detect_gesture_apices(gestures: dict) -> dict:
-    """Return a dictionary of gesture indices with their apex timestamps according to 3 criteria:
-    - minimum speed (sudden stop or change in direction),
-    - maximum acceleration
-    - maximum extension from start
-    """
-    gesture_apices = defaultdict(lambda: {})
-    for idx, gesture_data in gestures.items():
-        timestamps = np.array([entry['timestamp'] for entry in gesture_data])
-        hand_shapes = np.array([entry['hand_shape'] for entry in gesture_data])
-        min_speed_time, max_accel_time, max_extension_time = find_apex(hand_shapes, timestamps)
-        gesture_apices[idx]["min_speed_timestamp"] = min_speed_time
-        gesture_apices[idx]["max_acceleration_timestamp"] = max_accel_time
-        gesture_apices[idx]["max_extension_timestamp"] = max_extension_time
-    return gesture_apices
 
 class GestureDetector:
     def __init__(self,

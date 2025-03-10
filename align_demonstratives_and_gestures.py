@@ -1,8 +1,5 @@
 import json
 import logging
-import os
-from collections import defaultdict
-from statistics import mean
 from typing import Callable
 
 from constants import (ASR_MODEL_PATH, ASR_TIMED_RESULTS_KEY, AUDIO_PATH,
@@ -28,7 +25,11 @@ def get_word_timings_from_asr_results(asr_results: dict, filter_func: Callable) 
     return filtered_word_timings
 
 
-def find_nearest_gesture_to_words(word_timings: list, gesture_apices: dict, key=TOKEN_ONSET_KEY) -> dict:
+def find_nearest_gesture_to_words(word_timings: list,
+                                  gesture_apices: dict,
+                                  key=TOKEN_ONSET_KEY,
+                                  max_offset_from_word: float | None = None,
+                                  ) -> dict:
     """Find nearest gesture (by apex timestamp) to each word's onset."""
     nearest_gestures = {}
     for entry in word_timings:
@@ -36,7 +37,10 @@ def find_nearest_gesture_to_words(word_timings: list, gesture_apices: dict, key=
         word = entry[TOKEN_KEY]
         nearest_gesture = min(gesture_apices.keys(), key=lambda x: abs(word_time - gesture_apices[x]))
         gesture_apex = gesture_apices[nearest_gesture]
-        nearest_gestures[(word, word_time)] = (nearest_gesture, gesture_apex)
+        if max_offset_from_word and abs(word_time - gesture_apex) > max_offset_from_word:
+            nearest_gestures[(word, word_time)] = None
+        else:
+            nearest_gestures[(word, word_time)] = (nearest_gesture, gesture_apex)
     return nearest_gestures
 
 
@@ -100,4 +104,5 @@ nearest_gestures_to_demonstratives = find_nearest_gesture_to_words(
     demonstrative_timings,
     gesture_apices,
     key=TOKEN_ONSET_KEY,
+    max_offset_from_word=0.75,
 )

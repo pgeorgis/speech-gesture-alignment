@@ -6,10 +6,11 @@ from statistics import mean
 from typing import Callable
 
 from constants import (ASR_MODEL_PATH, ASR_TIMED_RESULTS_KEY, AUDIO_PATH,
-                       DEMONSTRATIVE_PRONOUNS,
+                       CORRECTED_TRANCRIPT_PATH, DEMONSTRATIVE_PRONOUNS,
                        DEMONSTRATIVES_SUBTITLES_FILE_PATH,
                        FULL_SUBTITLES_FILE_PATH, GESTURES_JSON, TOKEN_KEY,
-                       TOKEN_ONSET_KEY, TRANCRIPT_PATH, VIDEO_PATH)
+                       TOKEN_ONSET_KEY, TRANCRIPT_PATH, VIDEO_FRAMES_OUTDIR,
+                       VIDEO_PATH)
 from extract_gesture import GestureDetector
 from extract_speech import speech_to_text
 from gesture_apex import detect_gesture_apices
@@ -66,7 +67,7 @@ demonstratives_str = json_to_srt(demonstrative_timings)
 write_srt(demonstratives_str, DEMONSTRATIVES_SUBTITLES_FILE_PATH)
 add_subtitles_to_video(VIDEO_PATH, DEMONSTRATIVES_SUBTITLES_FILE_PATH, subtitle_language="de", soft_subtitle=True)
 # Create video copy with full subtitles also (from corrected transcription)
-with open(os.path.join("data", "corrected_transcription.json"), "r") as f:
+with open(CORRECTED_TRANCRIPT_PATH, "r") as f:
     corrected_asr_results = json.load(f)
 full_subtitles = json_to_srt(corrected_asr_results[ASR_TIMED_RESULTS_KEY])
 write_srt(full_subtitles, FULL_SUBTITLES_FILE_PATH)
@@ -88,10 +89,10 @@ gesture_apices = detect_gesture_apices(gesture_events)
 # Get averaged timestamp of each gesture's apex candidates
 apex_timestamps = {idx: mean(gesture_apex.values()) for idx, gesture_apex in gesture_apices.items()}
 
-# # Save video frames from nearest gesture apex timestamps
+# Save video frames from nearest gesture apex timestamps
 extract_frames_by_timestamp(
     video_path=VIDEO_PATH,
     timestamps=apex_timestamps.values(),
-    output_folder=os.path.join("data", "video_frames")
+    output_folder=VIDEO_FRAMES_OUTDIR
 )
 

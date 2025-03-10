@@ -1,7 +1,9 @@
 ffmpeg-python
+matplotlib
 mediapipe
 numpy
 opencv-python
 pandas
 pydub
+seaborn
 vosk

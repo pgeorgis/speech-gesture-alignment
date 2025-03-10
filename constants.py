@@ -15,6 +15,7 @@ DEMONSTRATIVES_SUBTITLES_FILE_PATH = os.path.join("data", "subtitles", "demonstr
 FULL_SUBTITLES_FILE_PATH = os.path.join("data", "subtitles", "full_subtitles.srt")
 GESTURES_JSON = os.path.join("data", "gestures", "gestures.json")
 ALIGNED_GESTURES_TSV = os.path.join("data", "gestures", "aligned_gestures.tsv")
+GESTURE_ALIGNMENT_DENSITY_PLOT = os.path.join("data", "gestures", "gesture_alignment_density_plot.png")
 
 # KEYS IN ASR RESULTS
 ASR_TIMED_RESULTS_KEY = "result"

@@ -10,12 +10,13 @@ from constants import (ALIGNED_GESTURES_TSV, ASR_MODEL_PATH,
                        DEMONSTRATIVES_SUBTITLES_FILE_PATH,
                        FULL_SUBTITLES_FILE_PATH, GESTURES_JSON, TOKEN_KEY,
                        TOKEN_ONSET_KEY, TRANCRIPT_PATH, VIDEO_FRAMES_OUTDIR,
-                       VIDEO_PATH)
+                       VIDEO_PATH, GESTURE_ALIGNMENT_DENSITY_PLOT)
 from extract_gesture import GestureDetector
 from extract_speech import speech_to_text
 from gesture_apex import detect_gesture_apices
 from process_video import extract_frames_by_timestamp
 from subtitles import add_subtitles_to_video, json_to_srt, write_srt
+from plot_gesture_alignment import create_gesture_word_alignment_density_plot
 
 logger = logging.getLogger(__name__)
 
@@ -120,3 +121,9 @@ nearest_gestures_to_demonstratives = find_nearest_gesture_to_words(
 aligned_word_gesture_df = pd.DataFrame(nearest_gestures_to_demonstratives)
 # Write to TSV file
 aligned_word_gesture_df.to_csv(ALIGNED_GESTURES_TSV, index=False, sep="\t")
+create_gesture_word_alignment_density_plot(
+    aligned_word_gesture_df,
+    offset_key="nearest_gesture_offset",
+    title="Alignment of gesture apices to demonstratives",
+    outfile=GESTURE_ALIGNMENT_DENSITY_PLOT,
+)

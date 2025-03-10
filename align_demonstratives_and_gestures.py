@@ -78,21 +78,20 @@ add_subtitles_to_video(VIDEO_PATH, FULL_SUBTITLES_FILE_PATH, subtitle_language="
 max_seconds_bounds = 0.5
 gesture_detector = GestureDetector(VIDEO_PATH)
 gesture_detector.dump_gesture_events(GESTURES_JSON)
+logger.info(f"Wrote full gesture json to {GESTURES_JSON}")
 gesture_events = gesture_detector.search_for_gestures_near_specific_words(
     word_timings=demonstrative_timings,
-    max_window=0.5,
+    max_window=max_seconds_bounds,
     combine_overlapping=True,
 )
 logger.info(f"Found {len(gesture_events)} gesture events within bounds of demonstratives")
-gesture_apices = detect_gesture_apices(gesture_events)
-
 # Get averaged timestamp of each gesture's apex candidates
-apex_timestamps = {idx: mean(gesture_apex.values()) for idx, gesture_apex in gesture_apices.items()}
+gesture_apices = detect_gesture_apices(gesture_events, average=True)
 
 # Save video frames from nearest gesture apex timestamps
 extract_frames_by_timestamp(
     video_path=VIDEO_PATH,
-    timestamps=apex_timestamps.values(),
+    timestamps=gesture_apices.values(),
     output_folder=VIDEO_FRAMES_OUTDIR
 )
 

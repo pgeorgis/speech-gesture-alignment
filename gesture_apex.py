@@ -1,4 +1,5 @@
 from collections import defaultdict
+from statistics import mean
 
 import numpy as np
 
@@ -33,7 +34,7 @@ def find_apex(positions: np.array, times: np.array):
     return times[min_speed_idx], times[max_accel_idx], times[max_extension_idx]
 
 
-def detect_gesture_apices(gestures: dict) -> dict:
+def detect_gesture_apices(gestures: dict, average=False) -> dict:
     """Return a dictionary of gesture indices with their apex timestamps according to 3 criteria:
     - minimum speed (sudden stop or change in direction),
     - maximum acceleration
@@ -47,4 +48,6 @@ def detect_gesture_apices(gestures: dict) -> dict:
         gesture_apices[idx]["min_speed_timestamp"] = min_speed_time
         gesture_apices[idx]["max_acceleration_timestamp"] = max_accel_time
         gesture_apices[idx]["max_extension_timestamp"] = max_extension_time
+    if average:
+        gesture_apices = {idx: mean(gesture_apex.values()) for idx, gesture_apex in gesture_apices.items()}
     return gesture_apices

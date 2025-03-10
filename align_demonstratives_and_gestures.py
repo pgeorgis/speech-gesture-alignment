@@ -1,6 +1,5 @@
 import json
 import logging
-from typing import Callable
 
 import pandas as pd
 
@@ -13,7 +12,7 @@ from constants import (ALIGNED_GESTURES_TSV, ASR_MODEL_PATH,
                        POS_TAG_KEY, TOKEN_ONSET_KEY, TRANCRIPT_PATH,
                        VIDEO_FRAMES_OUTDIR, VIDEO_PATH)
 from extract_gesture import GestureDetector
-from extract_speech import speech_to_text
+from extract_speech import get_word_timings_from_asr_results, speech_to_text
 from gesture_apex import detect_gesture_apices
 from plot_gesture_alignment import create_gesture_word_alignment_density_plot
 from pos_tagging import pos_tag_asr_results
@@ -21,14 +20,6 @@ from process_video import extract_frames_by_timestamp
 from subtitles import add_subtitles_to_video, json_to_srt, write_srt
 
 logger = logging.getLogger(__name__)
-
-def get_word_timings_from_asr_results(asr_results: dict, filter_func: Callable) -> list:
-    """Get word timings for selected words in ASR results."""
-    filtered_word_timings = []
-    for entry in asr_results[ASR_TIMED_RESULTS_KEY]:
-        if filter_func(entry):
-            filtered_word_timings.append(entry)
-    return filtered_word_timings
 
 
 def find_nearest_gesture_to_words(word_timings: list,
@@ -53,7 +44,7 @@ def find_nearest_gesture_to_words(word_timings: list,
             entry_copy["nearest_gesture_apex"] = nearest_gesture_apex
             entry_copy["nearest_gesture_offset"] = nearest_gesture_offset
         nearest_gestures.append(entry_copy)
-    
+
     return nearest_gestures
 
 

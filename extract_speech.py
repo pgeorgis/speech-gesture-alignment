@@ -1,9 +1,12 @@
 import json
 import logging
 import wave
+from typing import Callable
 
 from pydub import AudioSegment
 from vosk import KaldiRecognizer, Model
+
+from constants import ASR_TIMED_RESULTS_KEY
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(name)s %(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
@@ -40,3 +43,12 @@ def speech_to_text(wav_file: str, model_path: str = "model", chunk_duration_seco
 
     result = json.loads(recognizer.FinalResult())
     return result
+
+
+def get_word_timings_from_asr_results(asr_results: dict, filter_func: Callable) -> list:
+    """Get word timings for selected words in ASR results."""
+    filtered_word_timings = []
+    for entry in asr_results[ASR_TIMED_RESULTS_KEY]:
+        if filter_func(entry):
+            filtered_word_timings.append(entry)
+    return filtered_word_timings

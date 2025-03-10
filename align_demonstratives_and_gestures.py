@@ -8,11 +8,9 @@ from typing import Callable
 from constants import (ASR_MODEL_PATH, ASR_TIMED_RESULTS_KEY, AUDIO_PATH,
                        DEMONSTRATIVE_PRONOUNS,
                        DEMONSTRATIVES_SUBTITLES_FILE_PATH,
-                       FULL_SUBTITLES_FILE_PATH, TOKEN_KEY, TOKEN_ONSET_KEY,
-                       TRANCRIPT_PATH, VIDEO_PATH)
-from extract_gesture import (detect_gesture_apices,
-                             detect_hand_gestures_in_video,
-                             get_hands_detection_model)
+                       FULL_SUBTITLES_FILE_PATH, GESTURES_JSON, TOKEN_KEY,
+                       TOKEN_ONSET_KEY, TRANCRIPT_PATH, VIDEO_PATH)
+from extract_gesture import GestureDetector, detect_gesture_apices
 from extract_speech import speech_to_text
 from process_video import extract_frames_by_timestamp
 from subtitles import add_subtitles_to_video, json_to_srt, write_srt
@@ -73,21 +71,17 @@ full_subtitles = json_to_srt(corrected_asr_results[ASR_TIMED_RESULTS_KEY])
 write_srt(full_subtitles, FULL_SUBTITLES_FILE_PATH)
 add_subtitles_to_video(VIDEO_PATH, FULL_SUBTITLES_FILE_PATH, subtitle_language="de", soft_subtitle=True)
 
-# Initialize hands detection model with minimum dection confidence    
-hands_detection_model = get_hands_detection_model(min_detection_confidence=0.75)
-
 # Detect hand gestures within range of demonstratives and find apices of each
 all_gestures_within_bounds_of_demonstratives = defaultdict(list)
 max_seconds_bounds = 0.5
 seen_gesture_count = 0
+gesture_detector = GestureDetector(VIDEO_PATH)
 for i, entry in enumerate(demonstrative_timings):
     start_bound = max(0, entry[TOKEN_ONSET_KEY] - max_seconds_bounds)
     end_bound = entry[TOKEN_ONSET_KEY] + max_seconds_bounds
     word = entry[TOKEN_KEY]
     logger.info(f"Searching for gestures near <{word}> (bounds: {start_bound}-{end_bound})")
-    gestures = detect_hand_gestures_in_video(
-        VIDEO_PATH,
-        hands_detection_model,
+    gestures = gesture_detector.extract_gestures_by_time_bounds(
         start_bound=start_bound,
         end_bound=end_bound,
         maximum_frames_per_gesture=None,
@@ -110,21 +104,6 @@ gesture_apices = detect_gesture_apices(all_gestures_within_bounds_of_demonstrati
 
 # Get averaged timestamp of each gesture's apex candidates
 apex_timestamps = {idx: mean(gesture_apex.values()) for idx, gesture_apex in gesture_apices.items()}
-# # Get timestamp of each gesture's apex candidates
-# # apex_timestamps = {
-# #     (idx, apex_type): apex_timestamp
-# #     for idx, gesture in gesture_apices.items()
-# #     for (apex_type, apex_timestamp) in gesture.items()
-# # }
-
-# # Find nearest gesture to each pronoun's onset
-# nearest_gestures_to_demonstratives = find_nearest_gesture_to_words(
-#     demonstrative_timings,
-#     apex_timestamps,
-#     key=TOKEN_ONSET_KEY,
-# )
-# # prune suboptimal aligned pairs
-# # find which demonstrative aligns best if >1 aligned to same gesture
 
 # # Save video frames from nearest gesture apex timestamps
 extract_frames_by_timestamp(

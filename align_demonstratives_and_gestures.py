@@ -1,18 +1,23 @@
 import json
+import logging
 import os
+from collections import defaultdict
 from statistics import mean
 from typing import Callable
 
 from constants import (ASR_MODEL_PATH, ASR_TIMED_RESULTS_KEY, AUDIO_PATH,
-                       DEMONSTRATIVE_PRONOUNS, TOKEN_KEY, TOKEN_ONSET_KEY,
-                       TRANCRIPT_PATH, VIDEO_PATH, DEMONSTRATIVES_SUBTITLES_FILE_PATH, FULL_SUBTITLES_FILE_PATH)
-from extract_gesture import (detect_gesture_apices,
-                             detect_hand_gestures_in_video,
-                             get_hands_detection_model)
+                       CORRECTED_TRANCRIPT_PATH, DEMONSTRATIVE_PRONOUNS,
+                       DEMONSTRATIVES_SUBTITLES_FILE_PATH,
+                       FULL_SUBTITLES_FILE_PATH, GESTURES_JSON, TOKEN_KEY,
+                       TOKEN_ONSET_KEY, TRANCRIPT_PATH, VIDEO_FRAMES_OUTDIR,
+                       VIDEO_PATH)
+from extract_gesture import GestureDetector
 from extract_speech import speech_to_text
+from gesture_apex import detect_gesture_apices
 from process_video import extract_frames_by_timestamp
-from subtitles import json_to_srt, write_srt, add_subtitles_to_video
+from subtitles import add_subtitles_to_video, json_to_srt, write_srt
 
+logger = logging.getLogger(__name__)
 
 def get_word_timings_from_asr_results(asr_results: dict, filter_func: Callable) -> list:
     """Get word timings for selected words in ASR results."""
@@ -49,44 +54,11 @@ asr_results = speech_to_text(AUDIO_PATH, model_path=ASR_MODEL_PATH, chunk_durati
 with open(TRANCRIPT_PATH, "w") as f:
     json.dump(asr_results, f, indent=4)
 
-# Initialize hands detection model with minimum dection confidence    
-hands_detection_model = get_hands_detection_model(min_detection_confidence=0.75)
-
-# Detect hand gestures and find apices of each
-gestures = detect_hand_gestures_in_video(VIDEO_PATH, hands_detection_model)
-gesture_apices = detect_gesture_apices(gestures)
-
-# Get averaged timestamp of each gesture's apex candidates
-apex_timestamps = {idx: mean(gesture_apex.values()) for idx, gesture_apex in gesture_apices.items()}
-# Get timestamp of each gesture's apex candidates
-# apex_timestamps = {
-#     (idx, apex_type): apex_timestamp
-#     for idx, gesture in gesture_apices.items()
-#     for (apex_type, apex_timestamp) in gesture.items()
-# }
 
 # Get timestamps of demonstrative pronoun onsets from ASR results
 demonstrative_timings = get_word_timings_from_asr_results(
     asr_results,
     filter_func=is_demonstrative,
-)
-
-# Find nearest gesture to each pronoun's onset
-nearest_gestures_to_demonstratives = find_nearest_gesture_to_words(
-    demonstrative_timings,
-    apex_timestamps,
-    key=TOKEN_ONSET_KEY,
-)
-
-# Save video frames from nearest gesture apex timestamps
-nearest_gesture_timestamps = [
-    apex_timestamp
-    for _, apex_timestamp in nearest_gestures_to_demonstratives.values()
-]
-extract_frames_by_timestamp(
-    video_path=VIDEO_PATH,
-    timestamps=nearest_gesture_timestamps,
-    output_folder=os.path.join("data", "video_frames")
 )
 
 # Create subtitle file with demonstratives only
@@ -95,8 +67,31 @@ demonstratives_str = json_to_srt(demonstrative_timings)
 write_srt(demonstratives_str, DEMONSTRATIVES_SUBTITLES_FILE_PATH)
 add_subtitles_to_video(VIDEO_PATH, DEMONSTRATIVES_SUBTITLES_FILE_PATH, subtitle_language="de", soft_subtitle=True)
 # Create video copy with full subtitles also (from corrected transcription)
-with open(os.path.join("data", "corrected_transcription.json"), "r") as f:
+with open(CORRECTED_TRANCRIPT_PATH, "r") as f:
     corrected_asr_results = json.load(f)
 full_subtitles = json_to_srt(corrected_asr_results[ASR_TIMED_RESULTS_KEY])
 write_srt(full_subtitles, FULL_SUBTITLES_FILE_PATH)
 add_subtitles_to_video(VIDEO_PATH, FULL_SUBTITLES_FILE_PATH, subtitle_language="de", soft_subtitle=True)
+
+
+# Detect hand gestures within range of demonstratives and find apices of each
+max_seconds_bounds = 0.5
+gesture_detector = GestureDetector(VIDEO_PATH)
+gesture_detector.dump_gesture_events(GESTURES_JSON)
+logger.info(f"Wrote full gesture json to {GESTURES_JSON}")
+gesture_events = gesture_detector.search_for_gestures_near_specific_words(
+    word_timings=demonstrative_timings,
+    max_window=max_seconds_bounds,
+    combine_overlapping=True,
+)
+logger.info(f"Found {len(gesture_events)} gesture events within bounds of demonstratives")
+# Get averaged timestamp of each gesture's apex candidates
+gesture_apices = detect_gesture_apices(gesture_events, average=True)
+
+# Save video frames from nearest gesture apex timestamps
+extract_frames_by_timestamp(
+    video_path=VIDEO_PATH,
+    timestamps=gesture_apices.values(),
+    output_folder=VIDEO_FRAMES_OUTDIR
+)
+

@@ -1,6 +1,7 @@
-import ffmpeg
-from datetime import timedelta
 import os
+from datetime import timedelta
+
+import ffmpeg
 
 from constants import TOKEN_END_KEY, TOKEN_KEY, TOKEN_ONSET_KEY
 
